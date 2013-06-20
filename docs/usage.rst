@@ -64,13 +64,37 @@ cache-manifest ::
 
 
 	urlpatterns = patterns('',
-	  url(r'^manifest\.appcache$', ManifestView.as_view(), name="cache_manifest"),
+	  url(r'^manifest/', include('manifesto.urls')),
 	)
 
 Then from your template, you can link to your cache-manifest ::
 
 	<!doctype html>
-	<html manifest="{% url cache_manifest %}">
+    {% load manifesto %}
+	<html manifest="{% manifest_url %}">
 	 <head>
 	  <meta charset="utf-8">
 
+
+Per-user / variable cache-manifests
+===================================
+
+It may sometimes be desirable to customize the manifest to each user. Manifesto 
+allows you to pass a custom key into the manifest URL as follows:
+
+    <!doctype html>
+    {% load manifesto %}
+    <html manifest="{% manifest_url request.user.id %}">
+     <head>
+      <meta charset="utf-8">
+
+In the above example we use ``request.user.id``, but you can use any basic value 
+you wish. This will be signed inserted into the URL.
+
+The value will be available with your ``Manifest`` classes in ``self.key``.
+
+.. note:: 
+
+    Manifest usually caches the built manifest in memory. This is 
+    not possible when you provide a key, so expect a greater processing 
+    overhead
