@@ -1,21 +1,36 @@
 # -*- coding: utf-8 -*-
 from django.views.generic.base import TemplateView
+from django.core.signing import Signer
 
-from manifesto import manifest
+from manifesto import manifest, UnifiedManifest
 
 
 class ManifestView(TemplateView):
     template_name = "manifesto/manifest.appcache"
+
+    def dispatch(self, request, *args, **kwargs):
+        key = kwargs.get('key', None)
+        if key:
+            signer = Signer(sep='_', salt='manifesto')
+            key = signer.unsign(key)
+        self.key = key
+        return super(ManifestView, self).dispatch(request, *args, **kwargs)
 
     def render_to_response(self, context, **kwargs):
         kwargs['content_type'] = 'text/cache-manifest'
         return super(ManifestView, self).render_to_response(context, **kwargs)
 
     def get_context_data(self, **kwargs):
+        # We cannot use the globally cached manifest
+        # if we have a key
+        if self.key:
+            man = UnifiedManifest(self.key)
+        else:
+            man = manifest
         kwargs.update({
-            'revision': manifest.revision,
-            'cache_list': manifest.cache,
-            'network_list': manifest.network,
-            'fallback_list': manifest.fallback,
+            'revision': man.revision,
+            'cache_list': man.cache,
+            'network_list': man.network,
+            'fallback_list': man.fallback,
         })
         return kwargs

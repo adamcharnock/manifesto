@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import inspect
+import itertools
 
-from bencode import bencode
-
+from manifesto.settings import MANIFESTO_VERSIONER
 from django.conf import settings
 from django.utils import importlib
 
@@ -13,16 +13,16 @@ except ImportError:
 
 from manifesto.manifest import Manifest
 
-__all__ = ['manifest', 'Manifest']
-
+__all__ = ['manifest', 'Manifest', 'UnifiedManifest']
 
 class UnifiedManifest(object):
-    def __init__(self):
+    def __init__(self, key=None):
         self._fallback = []
         self._cache = []
         self._network = []
         self.manifests = []
         self._built = False
+        self.key = key
         self.excluded_manifests = getattr(settings,
             'MANIFESTO_EXCLUDED_MANIFESTS', [])
 
@@ -63,7 +63,9 @@ class UnifiedManifest(object):
                     class_path = "%s.manifest.%s" % (app, name)
                     if class_path in self.excluded_manifests:
                         continue
-                    manifests.append(item())
+                    manifest = item()
+                    manifest.set_key(self.key)
+                    manifests.append(manifest)
         return manifests
 
     @property
@@ -86,7 +88,10 @@ class UnifiedManifest(object):
 
     @property
     def revision(self):
-        revision = [manifest.revision() for manifest in self.manifests]
-        return sha1(bencode(revision)).hexdigest()[:7]
+        module, class_ = MANIFESTO_VERSIONER.rsplit('.', 1)
+        versioner = getattr(importlib.import_module(module), class_)()
+        files = itertools.chain(self.fallback, self.network, self.cache)
+        return versioner.get_version(files)
+
 
 manifest = UnifiedManifest()
