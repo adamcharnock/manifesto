@@ -22,13 +22,12 @@ class ManifestView(TemplateView):
         return super(ManifestView, self).render_to_response(context, **kwargs)
 
     def get_context_data(self, **kwargs):
-        # If we have a key they do not rely on the
-        # globally cached manifest
+        # We cannot use the globally cached manifest
+        # if we have a key
         if self.key:
             man = UnifiedManifest(key=self.key)
         else:
             man = manifest
-
         kwargs.update({
             'revision': man.revision,
             'cache_list': man.cache,

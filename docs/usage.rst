@@ -40,19 +40,6 @@ from ``Manifest`` class.
 	for reference.
 
 
-By default, a revision is calculated for each manifest, if you want to override
-the way we calculate revision, you just need to add a ``revision`` method to
-your manifest ::
-
-	import time
-	from manifesto import Manifest
-
-
-	class StaticManifest(Manifest):
-	  def revision(self):
-	    return int(time.time())
-
-
 Access to the final cache-manifest
 ==================================
 
@@ -98,3 +85,20 @@ The value will be available with your ``Manifest`` classes in ``self.key``.
     Manifest usually caches the built manifest in memory. This is 
     not possible when you provide a key, so expect a greater processing 
     overhead
+
+
+Cache-manifest versioning
+=========================
+
+By default, the manifest version is calculated based up the name of the files 
+within the cache.
+
+However, you can customise this in your settings file::
+
+    MANIFESTO_VERSIONER = 'manifesto.versioners.LastModifiedVersioner'
+
+The `LastModifiedVersioner` will use the last modified time of any static 
+files in your manifest, falling back to using the filename for other files.
+
+You can create your own versioner by extending ``manifesto.versioners.AbstractVersioner`` 
+and implementing a method with the stub ``get_version(self, files)``.

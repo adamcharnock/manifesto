@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import inspect
+import itertools
 
-from bencode import bencode
-
+from manifesto.settings import MANIFESTO_VERSIONER
 from django.conf import settings
 from django.utils import importlib
 
@@ -14,7 +14,6 @@ except ImportError:
 from manifesto.manifest import Manifest
 
 __all__ = ['manifest', 'Manifest', 'UnifiedManifest']
-
 
 class UnifiedManifest(object):
     def __init__(self, key=None):
@@ -90,7 +89,10 @@ class UnifiedManifest(object):
 
     @property
     def revision(self):
-        revision = [manifest.revision() for manifest in self.manifests]
-        return sha1(bencode(revision)).hexdigest()[:7]
+        module, class_ = MANIFESTO_VERSIONER.rsplit('.', 1)
+        versioner = getattr(importlib.import_module(module), class_)()
+        files = itertools.chain(self.fallback, self.network, self.cache)
+        return versioner.get_version(files)
+
 
 manifest = UnifiedManifest()
