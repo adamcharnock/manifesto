@@ -14,6 +14,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'bencode',
+        'django>=1.4',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

@@ -9,6 +9,10 @@ except ImportError:
 
 
 class Manifest(object):
+    def __init__(self, *args, **kwargs):
+        super(Manifest, self).__init__(*args, **kwargs)
+        self.key = None
+
     def fallback(self):
         return []
 
@@ -21,3 +25,6 @@ class Manifest(object):
     def revision(self):
         revision = list(itertools.chain(self.fallback(), self.network(), self.cache()))
         return sha1(bencode(revision)).hexdigest()[:7]
+
+    def set_key(self, key):
+        self.key = key
