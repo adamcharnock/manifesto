@@ -2,7 +2,7 @@
 import inspect
 import itertools
 
-from manifesto.settings import MANIFESTO_VERSIONER
+from manifesto.settings import MANIFESTO_VERSIONER, MANIFESTO_FILTER
 from django.conf import settings
 from django.utils import importlib
 
@@ -45,6 +45,13 @@ class UnifiedManifest(object):
             self._cache += manifest.cache()
             self._network += manifest.network()
 
+        module, class_ = MANIFESTO_FILTER.rsplit('.', 1)
+        filterObj = getattr(importlib.import_module(module), class_)()
+
+        self._fallback = filterObj.filter_files(self._fallback)
+        self._cache = filterObj.filter_files(self._cache)
+        self._network = filterObj.filter_files(self._network)
+
         self._built = True
 
     def collect_manifest(self):
@@ -67,6 +74,7 @@ class UnifiedManifest(object):
                     if self.key:
                         manifest.set_key(self.key)
                     manifests.append(manifest)
+
         return manifests
 
     @property
