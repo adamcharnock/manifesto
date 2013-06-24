@@ -51,3 +51,18 @@ class LastModifiedVersioner(AbstractCachedVersioner):
         else:
             version = file_name
         return version
+
+
+class FileContentsVersioner(AbstractCachedVersioner):
+    def get_file_version(self, file_name):
+        absolute_name = file_name.replace(settings.STATIC_URL, '', 1).lstrip('/')
+        absolute_name = find(absolute_name)
+        if absolute_name:
+            try:
+                with open(absolute_name) as f:
+                    version = sha1(f.read()).hexdigest()
+            except IOError:
+                version = file_name
+        else:
+            version = file_name
+        return version
