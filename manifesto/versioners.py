@@ -10,18 +10,22 @@ except ImportError:
 from django.contrib.staticfiles.finders import find
 from django.conf import settings
 
+
 class AbstractVersioner(object):
-    def get_version(self, files):
+    def get_version(self, files, version_data=[]):
+        """Get a version string for the given files and version_data"""
         raise NotImplemented('Implement this method in a child class')
 
 
 class AbstractCachedVersioner(AbstractVersioner):
     cache = {}
 
-    def get_version(self, files):
+    def get_version(self, files, version_data=[]):
         hash_ = sha1()
         for v in self.get_versions(files):
             hash_.update(str(v))
+        for d in version_data:
+            hash_.update(str(d))
         return hash_.hexdigest()[:7]
 
     def get_versions(self, files):
@@ -38,8 +42,8 @@ class AbstractCachedVersioner(AbstractVersioner):
 
 
 class FileNameVersioner(AbstractVersioner):
-    def get_version(self, files):
-        return sha1(bencode(list(files))).hexdigest()[:7]
+    def get_version(self, files, version_data=[]):
+        return sha1(bencode(list(files) + version_data)).hexdigest()[:7]
 
 
 class LastModifiedVersioner(AbstractCachedVersioner):

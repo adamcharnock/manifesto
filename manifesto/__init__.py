@@ -20,6 +20,7 @@ class UnifiedManifest(object):
         self._fallback = []
         self._cache = []
         self._network = []
+        self._version_data = []
         self.manifests = []
         self._built = False
         self.key = key
@@ -30,6 +31,7 @@ class UnifiedManifest(object):
         self._fallback = []
         self._cache = []
         self._network = []
+        self._version_data = []
         self.manifests = []
         self._built = False
 
@@ -44,6 +46,7 @@ class UnifiedManifest(object):
             self._fallback += manifest.fallback()
             self._cache += manifest.cache()
             self._network += manifest.network()
+            self._version_data += manifest.version_data()
 
         module, class_ = MANIFESTO_FILTER.rsplit('.', 1)
         filterObj = getattr(importlib.import_module(module), class_)()
@@ -96,11 +99,17 @@ class UnifiedManifest(object):
         return self._cache
 
     @property
+    def version_data(self):
+        if not self._built:
+            self.build()
+        return self._version_data
+
+    @property
     def revision(self):
         module, class_ = MANIFESTO_VERSIONER.rsplit('.', 1)
         versioner = getattr(importlib.import_module(module), class_)()
         files = itertools.chain(self.fallback, self.network, self.cache)
-        return versioner.get_version(files)
+        return versioner.get_version(files, self.version_data)
 
 
 manifest = UnifiedManifest()

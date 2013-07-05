@@ -15,5 +15,8 @@ class Manifest(object):
     def cache(self):
         return []
 
+    def version_data(self):
+        return []
+
     def set_key(self, key):
         self.key = key
